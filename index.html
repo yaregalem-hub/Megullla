@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Student Registration</h1>
+    </header>
+
+    <section class="form-section">
+        <h2>Register Student</h2>
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="studentID" placeholder="Student ID">
+        <input type="text" id="department" placeholder="Department">
+        <button onclick="registerStudent()">Register</button>
+    </section>
+
+    <section class="list-section">
+        <h2>Registered Students</h2>
+        <ul id="studentList"></ul>
+    </section>
+
+    <script type="module">
+        // Import only what we need from the latest SDK (v11+)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // 3. Clean Firebase Config (Removed the extra script tags inside)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqaTr8pfbKgqalg7xi6gdQJn8OoXTncsQ",
+            authDomain: "mezgu-bbbf3.firebaseapp.com",
+            projectId: "mezgu-bbbf3",
+            storageBucket: "mezgu-bbbf3.firebasestorage.app",
+            messagingSenderId: "656809152769",
+            appId: "1:656809152769:web:6929fa79fb1243c9ff8b00"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 4. Attach functions to 'window' so the HTML can see them
+        window.registerStudent = async function() {
+            const name = document.getElementById("name").value;
+            const id = document.getElementById("studentID").value;
+            const dept = document.getElementById("department").value;
+
+            if(!name || !id || !dept) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            try {
+                // In v9+, we use addDoc(collection(...))
+                await addDoc(collection(db, "students"), {
+                    name: name,
+                    studentId: id,
+                    department: dept,
+                    createdAt: new Date()
+                });
+                alert("Student Registered!");
+                
+                // Clear inputs
+                document.getElementById("name").value = "";
+                document.getElementById("studentID").value = "";
+                document.getElementById("department").value = "";
+                
+                displayStudents();
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Error: " + e.message);
+            }
+        };
+
+        window.displayStudents = async function() {
+            const list = document.getElementById("studentList");
+            list.innerHTML = "<li>Loading...</li>";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "students"));
+                list.innerHTML = "";
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement("li");
+                    li.textContent = `${data.name} | ${data.studentId} | ${data.department}`;
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                console.error("Error getting documents: ", e);
+            }
+        };
+
+        // Initial Load
+        window.onload = displayStudents;
+    </script>
+
+</body>
+</html>
